@@ -165,269 +165,259 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js"></script>
+
     <script>
-        // === FIX: LOAD DEPENDENCIES BEFORE LOGIC ===
-        // Load Cognito SDK dynamically (replaces <script> tag in head)
-        const cognitoScript = document.createElement('script');
-        cognitoScript.src = "https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js";
-        document.body.appendChild(cognitoScript);
-        
-        // Define Tailwind config (replaces script tag in head)
-        tailwind.config = {
-            mode: 'jit', 
-            content: ["./index.html", "./**/*.html"], 
+        // ==========================================
+        // ⚙️ CONFIGURATION SECTION
+        // ==========================================
+        const CONFIG = {
+            // 1. YOUR AIRTABLE URL
+            airtableUrl: "https://airtable.com",
+
+            // 2. YOUR COGNITO IDs (These must be real for the login to work)
+            region: "us-east-2", // IMPORTANT: Set your AWS Region
+            cognitoUserPoolId: "us-east-2_QQl1TrpJc",
+            cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq"
         };
+        // ==========================================
 
-        // Wait for the Cognito SDK to load before defining the main function
-        cognitoScript.onload = function() {
+        // Global state for Cognito User Object during challenges
+        let cognitoUser = null; 
+        let userAttributes = {}; // To store attributes during newPasswordRequired
+
+        // DOM elements
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+        const form = document.getElementById('loginForm');
+        const successState = document.getElementById('successState');
+        const errorAlert = document.getElementById('error-alert');
+        const errorMessage = document.getElementById('error-message');
+        const userInput = document.getElementById('username');
+        const passInput = document.getElementById('password');
+        
+        // Challenge UI elements
+        const initialLoginForm = document.getElementById('initialLoginForm');
+        const newPasswordForm = document.getElementById('newPasswordForm');
+        const newPasswordInput = document.getElementById('newPassword');
+        const setPasswordBtn = document.getElementById('setPasswordBtn');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+
+        // Forgot Password UI elements
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        const resetRequestStep = document.getElementById('resetRequestStep');
+        const resetConfirmStep = document.getElementById('resetConfirmStep');
+        const resetUsernameInput = document.getElementById('resetUsername');
+        const verificationCodeInput = document.getElementById('verificationCode');
+        const finalNewPasswordInput = document.getElementById('finalNewPassword');
+        const requestCodeBtn = document.getElementById('requestCodeBtn');
+        const confirmResetBtn = document.getElementById('confirmResetBtn');
+        
+        // Apply the Airtable Link to the button
+        document.getElementById('airtable-link').href = CONFIG.airtableUrl;
+
+        // Helper function to update UI state
+        function updateUI(loading = false, error = null) {
+            btnText.textContent = loading ? "Verifying Credentials..." : "Sign In Securely";
+            btnSpinner.classList.toggle('hidden', !loading);
             
-            // ==========================================
-            // ⚙️ CONFIGURATION SECTION
-            // ==========================================
-            const CONFIG = {
-                // 1. YOUR AIRTABLE URL
-                airtableUrl: "https://airtable.com",
-
-                // 2. YOUR COGNITO IDs (These must be real for the login to work)
-                region: "us-east-2", // IMPORTANT: Set your AWS Region
-                cognitoUserPoolId: "us-east-2_QQl1TrpJc",
-                cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq"
-            };
-            // ==========================================
-
-            // Global state for Cognito User Object during challenges
-            let cognitoUser = null; 
-            let userAttributes = {}; // To store attributes during newPasswordRequired
-
-            // DOM elements
-            const btnText = document.getElementById('btn-text');
-            const btnSpinner = document.getElementById('btn-spinner');
-            const form = document.getElementById('loginForm');
-            const successState = document.getElementById('successState');
-            const errorAlert = document.getElementById('error-alert');
-            const errorMessage = document.getElementById('error-message');
-            const userInput = document.getElementById('username');
-            const passInput = document.getElementById('password');
+            const submitBtn = initialLoginForm ? initialLoginForm.querySelector('button[type="submit"]') : null;
+            if (submitBtn) {
+                // FIX: Ensure button is enabled when NOT loading
+                submitBtn.disabled = loading;
+            }
             
-            // Challenge UI elements
-            const initialLoginForm = document.getElementById('initialLoginForm');
-            const newPasswordForm = document.getElementById('newPasswordForm');
-            const newPasswordInput = document.getElementById('newPassword');
-            const setPasswordBtn = document.getElementById('setPasswordBtn');
-            const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+            if (error) {
+                errorMessage.textContent = error;
+                errorAlert.classList.remove('hidden');
+            } else {
+                errorAlert.classList.add('hidden');
+            }
+        }
 
-            // Forgot Password UI elements
-            const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-            const resetRequestStep = document.getElementById('resetRequestStep');
-            const resetConfirmStep = document.getElementById('resetConfirmStep');
-            const resetUsernameInput = document.getElementById('resetUsername');
-            const verificationCodeInput = document.getElementById('verificationCode');
-            const finalNewPasswordInput = document.getElementById('finalNewPassword');
-            const requestCodeBtn = document.getElementById('requestCodeBtn');
-            const confirmResetBtn = document.getElementById('confirmResetBtn');
+        // Run updateUI immediately to set button state (Enabled)
+        updateUI(false); 
+
+        // Initialize AWS Cognito User Pool
+        const poolData = {
+            UserPoolId: CONFIG.cognitoUserPoolId,
+            ClientId: CONFIG.cognitoClientId
+        };
+        const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+        
+        // ===========================================
+        // 1. MAIN LOGIN HANDLER
+        // ===========================================
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            // Apply the Airtable Link to the button
-            document.getElementById('airtable-link').href = CONFIG.airtableUrl;
+            const username = userInput.value.trim();
+            const password = passInput.value;
 
-            // Helper function to update UI state
-            function updateUI(loading = false, error = null) {
-                btnText.textContent = loading ? "Verifying Credentials..." : "Sign In Securely";
-                btnSpinner.classList.toggle('hidden', !loading);
-                
-                const submitBtn = initialLoginForm ? initialLoginForm.querySelector('button[type="submit"]') : null;
-                if (submitBtn) {
-                    submitBtn.disabled = loading;
-                }
-                
-                if (error) {
-                    errorMessage.textContent = error;
-                    errorAlert.classList.remove('hidden');
-                } else {
-                    errorAlert.classList.add('hidden');
-                }
+            if (!username || !password) {
+                updateUI(false, "Please enter both username and password.");
+                return;
             }
 
-            // Initialize AWS Cognito User Pool
-            const poolData = {
-                UserPoolId: CONFIG.cognitoUserPoolId,
-                ClientId: CONFIG.cognitoClientId
-            };
-            const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+            // Hide other forms that might be visible
+            newPasswordForm.classList.add('hidden');
+            forgotPasswordForm.classList.add('hidden');
+            initialLoginForm.classList.remove('hidden'); // Ensure login form is visible while loading
+
+            updateUI(true); 
             
-            // ===========================================
-            // 1. MAIN LOGIN HANDLER
-            // ===========================================
-            document.getElementById('loginForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const username = userInput.value.trim();
-                const password = passInput.value;
+            const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
+                Username: username,
+                Password: password,
+            });
 
-                if (!username || !password) {
-                    updateUI(false, "Please enter both username and password.");
+            cognitoUser = new AmazonCognitoIdentity.CognitoUser({
+                Username: username,
+                Pool: userPool
+            });
+
+            cognitoUser.authenticateUser(authenticationDetails, {
+                onSuccess: function (result) {
+                    // Authentication was successful!
+                    updateUI(false);
+                    // Hide the current view and show success
+                    initialLoginForm.classList.add('hidden');
+                    successState.classList.remove('hidden');
+                },
+                onFailure: function (err) {
+                    let message = err.message || "An unknown error occurred.";
+                    if (err.code === 'UserNotFoundException' || err.code === 'NotAuthorizedException') {
+                        message = "Incorrect username or password.";
+                    }
+                    updateUI(false, message);
+                },
+                // Handle FORCE_CHANGE_PASSWORD status
+                newPasswordRequired: function(attrs, requiredAttrs) {
+                    updateUI(false);
+                    userAttributes = attrs; // Store attributes for the next step
+                    
+                    // Hide login form and show new password form
+                    initialLoginForm.classList.add('hidden');
+                    newPasswordForm.classList.remove('hidden'); 
+                    
+                    setPasswordBtn.textContent = "Set New Password & Sign In";
+                    setPasswordBtn.disabled = false;
+                },
+                mfaRequired: function(challengeName) {
+                    updateUI(false, "MFA is required. This demo does not support MFA.");
+                }
+            });
+        });
+
+        // ===========================================
+        // 2. NEW PASSWORD HANDLER (for FORCE_CHANGE_PASSWORD status)
+        // ===========================================
+        setPasswordBtn.addEventListener('click', function() {
+            const newPassword = newPasswordInput.value;
+            
+            if (!newPassword) return updateUI(false, "New password cannot be empty.");
+
+            setPasswordBtn.textContent = "Setting Password...";
+            setPasswordBtn.disabled = true;
+            updateUI(false); 
+
+            // Complete the challenge using the stored cognitoUser object
+            cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, {
+                onSuccess: function (sessionResult) {
+                    // Success! User is now logged in.
+                    newPasswordForm.classList.add('hidden');
+                    successState.classList.remove('hidden');
+                },
+                onFailure: function (err) {
+                    setPasswordBtn.textContent = "Set New Password & Sign In";
+                    setPasswordBtn.disabled = false;
+                    updateUI(false, err.message || "Failed to set new password. Check requirements.");
+                }
+            });
+        });
+
+        // ===========================================
+        // 3. FORGOT PASSWORD HANDLER
+        // ===========================================
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            updateUI(false); 
+
+            // Switch view from login to reset
+            newPasswordForm.classList.add('hidden');
+            initialLoginForm.classList.add('hidden');
+            forgotPasswordForm.classList.remove('hidden');
+            
+            // Show the request step first
+            resetRequestStep.classList.remove('hidden');
+            resetConfirmStep.classList.add('hidden');
+        });
+
+        forgotPasswordForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const username = resetUsernameInput.value.trim();
+            // Determine which step the user is on by checking if the confirmation step is hidden
+            const currentStepIsRequest = resetConfirmStep.classList.contains('hidden');
+            
+            if (!username) {
+                updateUI(false, "Please enter your username.");
+                return;
+            }
+
+            // --- Step A: Request the Reset Code ---
+            if (currentStepIsRequest) {
+                const originalText = requestCodeBtn.textContent;
+                requestCodeBtn.textContent = "Sending...";
+                requestCodeBtn.disabled = true;
+
+                const cognitoUser = new AmazonCognitoIdentity.CognitoUser({ Username: username, Pool: userPool });
+
+                cognitoUser.forgotPassword({
+                    onSuccess: function (data) {
+                        // Success! Proceed to the confirmation step.
+                        resetRequestStep.classList.add('hidden');
+                        resetConfirmStep.classList.remove('hidden');
+                        updateUI(false); 
+                    },
+                    onFailure: function(err) {
+                        requestCodeBtn.textContent = originalText;
+                        requestCodeBtn.disabled = false;
+                        updateUI(false, err.message || "Failed to send reset code.");
+                    }
+                });
+            } 
+            // --- Step B: Confirm the New Password ---
+            else {
+                const code = verificationCodeInput.value;
+                const newPassword = finalNewPasswordInput.value;
+                
+                if (!code || !newPassword) {
+                    updateUI(false, "Please enter the code and a new password.");
                     return;
                 }
 
-                // Hide other forms that might be visible
-                newPasswordForm.classList.add('hidden');
-                forgotPasswordForm.classList.add('hidden');
-                initialLoginForm.classList.remove('hidden'); // Ensure login form is visible while loading
-
-                updateUI(true); 
+                const originalText = confirmResetBtn.textContent;
+                confirmResetBtn.textContent = "Changing...";
+                confirmResetBtn.disabled = true;
                 
-                const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
-                    Username: username,
-                    Password: password,
-                });
+                const cognitoUser = new AmazonCognitoIdentity.CognitoUser({ Username: username, Pool: userPool });
 
-                cognitoUser = new AmazonCognitoIdentity.CognitoUser({
-                    Username: username,
-                    Pool: userPool
-                });
-
-                cognitoUser.authenticateUser(authenticationDetails, {
-                    onSuccess: function (result) {
-                        // Authentication was successful!
-                        updateUI(false);
-                        // Hide the current view and show success
-                        initialLoginForm.classList.add('hidden');
+                cognitoUser.confirmPassword(code, newPassword, {
+                    onSuccess: function() {
+                        // Success! Hide the form and show the success state.
+                        forgotPasswordForm.classList.add('hidden');
                         successState.classList.remove('hidden');
-                    },
-                    onFailure: function (err) {
-                        let message = err.message || "An unknown error occurred.";
-                        if (err.code === 'UserNotFoundException' || err.code === 'NotAuthorizedException') {
-                            message = "Incorrect username or password.";
-                        }
-                        updateUI(false, message);
-                    },
-                    // Handle FORCE_CHANGE_PASSWORD status
-                    newPasswordRequired: function(attrs, requiredAttrs) {
                         updateUI(false);
-                        userAttributes = attrs; // Store attributes for the next step
-                        
-                        // Hide login form and show new password form
-                        initialLoginForm.classList.add('hidden');
-                        newPasswordForm.classList.remove('hidden'); 
-                        
-                        setPasswordBtn.textContent = "Set New Password & Sign In";
-                        setPasswordBtn.disabled = false;
                     },
-                    mfaRequired: function(challengeName) {
-                        updateUI(false, "MFA is required. This demo does not support MFA.");
+                    onFailure: function(err) {
+                        confirmResetBtn.textContent = originalText;
+                        confirmResetBtn.disabled = false;
+                        updateUI(false, err.message || "Failed to change password. Check your code or password strength.");
                     }
                 });
-            });
-
-            // ===========================================
-            // 2. NEW PASSWORD HANDLER (for FORCE_CHANGE_PASSWORD status)
-            // ===========================================
-            setPasswordBtn.addEventListener('click', function() {
-                const newPassword = newPasswordInput.value;
-                
-                if (!newPassword) return updateUI(false, "New password cannot be empty.");
-
-                setPasswordBtn.textContent = "Setting Password...";
-                setPasswordBtn.disabled = true;
-                updateUI(false); 
-
-                // Complete the challenge using the stored cognitoUser object
-                cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, {
-                    onSuccess: function (sessionResult) {
-                        // Success! User is now logged in.
-                        newPasswordForm.classList.add('hidden');
-                        successState.classList.remove('hidden');
-                    },
-                    onFailure: function (err) {
-                        setPasswordBtn.textContent = "Set New Password & Sign In";
-                        setPasswordBtn.disabled = false;
-                        updateUI(false, err.message || "Failed to set new password. Check requirements.");
-                    }
-                });
-            });
-
-            // ===========================================
-            // 3. FORGOT PASSWORD HANDLER
-            // ===========================================
-            forgotPasswordLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                updateUI(false); 
-
-                // Switch view from login to reset
-                newPasswordForm.classList.add('hidden');
-                initialLoginForm.classList.add('hidden');
-                forgotPasswordForm.classList.remove('hidden');
-                
-                // Show the request step first
-                resetRequestStep.classList.remove('hidden');
-                resetConfirmStep.classList.add('hidden');
-            });
-
-            forgotPasswordForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                const username = resetUsernameInput.value.trim();
-                // Determine which step the user is on by checking if the confirmation step is hidden
-                const currentStepIsRequest = resetConfirmStep.classList.contains('hidden');
-                
-                if (!username) {
-                    updateUI(false, "Please enter your username.");
-                    return;
-                }
-
-                // --- Step A: Request the Reset Code ---
-                if (currentStepIsRequest) {
-                    const originalText = requestCodeBtn.textContent;
-                    requestCodeBtn.textContent = "Sending...";
-                    requestCodeBtn.disabled = true;
-
-                    const cognitoUser = new AmazonCognitoIdentity.CognitoUser({ Username: username, Pool: userPool });
-
-                    cognitoUser.forgotPassword({
-                        onSuccess: function (data) {
-                            // Success! Proceed to the confirmation step.
-                            resetRequestStep.classList.add('hidden');
-                            resetConfirmStep.classList.remove('hidden');
-                            updateUI(false); 
-                        },
-                        onFailure: function(err) {
-                            requestCodeBtn.textContent = originalText;
-                            requestCodeBtn.disabled = false;
-                            updateUI(false, err.message || "Failed to send reset code.");
-                        }
-                    });
-                } 
-                // --- Step B: Confirm the New Password ---
-                else {
-                    const code = verificationCodeInput.value;
-                    const newPassword = finalNewPasswordInput.value;
-                    
-                    if (!code || !newPassword) {
-                        updateUI(false, "Please enter the code and a new password.");
-                        return;
-                    }
-
-                    const originalText = confirmResetBtn.textContent;
-                    confirmResetBtn.textContent = "Changing...";
-                    confirmResetBtn.disabled = true;
-                    
-                    const cognitoUser = new AmazonCognitoIdentity.CognitoUser({ Username: username, Pool: userPool });
-
-                    cognitoUser.confirmPassword(code, newPassword, {
-                        onSuccess: function() {
-                            // Success! Hide the form and show the success state.
-                            forgotPasswordForm.classList.add('hidden');
-                            successState.classList.remove('hidden');
-                            updateUI(false);
-                        },
-                        onFailure: function(err) {
-                            confirmResetBtn.textContent = originalText;
-                            confirmResetBtn.disabled = false;
-                            updateUI(false, err.message || "Failed to change password. Check your code or password strength.");
-                        }
-                    });
-                }
-            });
-        }; // End cognitoScript.onload
+            }
+        });
     </script>
 </body>
 </html>
