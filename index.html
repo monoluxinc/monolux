@@ -3,73 +3,43 @@
 <html lang="en">
 
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Monolux | Employee Portal</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monolux | Employee Portal</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <script>
-        // Now 'tailwind' is defined, so this won't crash
         tailwind.config = {
             mode: 'jit', 
             content: ["./index.html", "./**/*.html"], 
         }
     </script>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js">
-        
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js"></script>
 
-
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-
-<style>
-
-body {
-
-font-family: 'Inter', sans-serif;
-
-background-color: #111827;
-
-background-image:
-
-radial-gradient(at 0% 0%, hsla(0, 0%, 100%, 0.05) 0px, transparent 50%),
-
-radial-gradient(at 100% 0%, hsla(0, 84%, 45%, 0.1) 0px, transparent 50%);
-
-}
-
-.loader {
-
-border-top-color: #DC2626;
-
--webkit-animation: spinner 1.5s linear infinite;
-
-animation: spinner 1.5s linear infinite;
-
-}
-
-@keyframes spinner {
-
-0% { transform: rotate(0deg); }
-
-100% { transform: rotate(360deg); }
-
-}
-
-.input-field:focus {
-
-box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
-
-}
-
-</style>
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(0, 0%, 100%, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(0, 84%, 45%, 0.1) 0px, transparent 50%);
+        }
+        .loader {
+            border-top-color: #DC2626;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .input-field:focus {
+            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+        }
+    </style>
 </head>
 
 <body class="h-screen w-full flex items-center justify-center px-4">
