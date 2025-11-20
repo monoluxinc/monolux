@@ -13,6 +13,8 @@
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
@@ -53,6 +55,16 @@
             </div>
 
             <form id="loginForm" class="space-y-6">
+                <div id="error-alert" class="hidden bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        </div>
+                        <div class="ml-3">
+                            <p id="error-message" class="text-sm font-medium text-red-800">Authentication failed.</p>
+                        </div>
+                    </div>
+                </div>
                 <div>
                     <label for="username" class="block text-sm font-medium text-gray-700">Employee Username</label>
                     <div class="mt-1 relative rounded-md shadow-sm">
@@ -117,47 +129,109 @@
         // ⚙️ CONFIGURATION SECTION
         // ==========================================
         const CONFIG = {
-            // 1. YOUR AIRTABLE URL (Replace the example below when you have the link)
+            // 1. YOUR AIRTABLE URL
             airtableUrl: "https://airtable.com",
 
-            // 2. YOUR COGNITO IDs
+            // 2. YOUR COGNITO IDs (These must be real for the login to work)
+            region: "us-east-2", // IMPORTANT: Set your AWS Region
             cognitoUserPoolId: "us-east-2_QQl1TrpJc",
             cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq"
         };
         // ==========================================
 
+        // DOM elements
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+        const form = document.getElementById('loginForm');
+        const successState = document.getElementById('successState');
+        const errorAlert = document.getElementById('error-alert');
+        const errorMessage = document.getElementById('error-message');
+        const userInput = document.getElementById('username');
+        const passInput = document.getElementById('password');
 
         // Apply the Airtable Link to the button
         document.getElementById('airtable-link').href = CONFIG.airtableUrl;
 
+        // Helper function to update UI state
+        function updateUI(loading = false, error = null) {
+            btnText.textContent = loading ? "Verifying Credentials..." : "Sign In Securely";
+            btnSpinner.classList.toggle('hidden', !loading);
+            form.querySelector('button[type="submit"]').disabled = loading;
+            
+            if (error) {
+                errorMessage.textContent = error;
+                errorAlert.classList.remove('hidden');
+            } else {
+                errorAlert.classList.add('hidden');
+            }
+        }
+
+        // Initialize AWS Cognito User Pool
+        const poolData = {
+            UserPoolId: CONFIG.cognitoUserPoolId,
+            ClientId: CONFIG.cognitoClientId
+        };
+        const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+        
         // Handle Login Submit
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const btnText = document.getElementById('btn-text');
-            const btnSpinner = document.getElementById('btn-spinner');
-            const form = document.getElementById('loginForm');
-            const successState = document.getElementById('successState');
-            const userInput = document.getElementById('username');
-            const passInput = document.getElementById('password');
+            const username = userInput.value.trim();
+            const password = passInput.value;
 
-            // Basic validation
-            if(userInput.value && passInput.value) {
-                
-                // 1. Show Loading State
-                btnText.textContent = "Verifying Credentials...";
-                btnSpinner.classList.remove('hidden');
-                
-                // NOTE: The current code below acts as a visual simulation.
-                // To enable *real* AWS authentication, you need the Cognito SDK.
+            if (!username || !password) {
+                updateUI(false, "Please enter both username and password.");
+                return;
+            }
 
-                // 2. Simulate API Delay
-                setTimeout(() => {
-                    // 3. Hide Form, Show Success
+            updateUI(true); // Show Loading State, clear previous errors
+
+            const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
+                Username: username,
+                Password: password,
+            });
+
+            const cognitoUser = new AmazonCognitoIdentity.CognitoUser({
+                Username: username,
+                Pool: userPool
+            });
+
+            // Call to AWS Cognito for Authentication
+            cognitoUser.authenticateUser(authenticationDetails, {
+                onSuccess: function (result) {
+                    // Authentication was successful!
+                    updateUI(false);
                     form.classList.add('hidden');
                     successState.classList.remove('hidden');
-                }, 1500);
-            }
+
+                    // If you wanted to set session credentials for further AWS calls:
+                    // AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                    //     IdentityPoolId: 'YOUR_IDENTITY_POOL_ID',
+                    //     Logins: {
+                    //         'cognito-idp.us-east-2.amazonaws.com/us-east-2_QQl1TrpJc': result.getIdToken().getJwtToken()
+                    //     }
+                    // });
+                },
+                onFailure: function (err) {
+                    // Authentication failed
+                    // Common errors: UserNotFoundException, NotAuthorizedException
+                    let message = err.message || "An unknown error occurred.";
+                    if (err.code === 'UserNotFoundException' || err.code === 'NotAuthorizedException') {
+                        message = "Incorrect username or password.";
+                    }
+                    updateUI(false, message);
+                },
+                // Handle complex flows (New Password Required or MFA)
+                newPasswordRequired: function(userAttributes, requiredAttributes) {
+                    updateUI(false, "New password required for this account. Please use the 'Forgot password?' link.");
+                    // In a real app, you would prompt the user for a new password here
+                },
+                mfaRequired: function(challengeName) {
+                    updateUI(false, "MFA is required. The login page needs additional code to handle MFA challenges.");
+                    // In a real app, you would prompt the user for the MFA code here
+                }
+            });
         });
     </script>
 </body>
