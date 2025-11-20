@@ -27,6 +27,15 @@
        .input-field:focus {
            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
        }
+       /* === FIX: Placeholder Alignment === */
+       .input-field::-webkit-input-placeholder, 
+       .input-field::-moz-placeholder, 
+       .input-field:-ms-input-placeholder, 
+       .input-field::placeholder {
+           /* Explicitly push the placeholder text to clear the icon space */
+           padding-left: 28px; 
+       }
+       /* ================================ */
        .error-message {
            color: #DC2626; /* red-600 */
            font-size: 0.875rem; /* text-sm */
