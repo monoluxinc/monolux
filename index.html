@@ -55,6 +55,22 @@
             </div>
 
             <form id="loginForm" class="space-y-6">
+                <form id="newPasswordForm" class="space-y-6 hidden">
+    <p class="text-sm font-medium text-gray-700 text-center bg-yellow-100 p-3 rounded-lg border border-yellow-200">
+        🔑 Your temporary password has expired. Please set a new one.
+    </p>
+
+    <div>
+        <label for="newPassword" class="block text-sm font-medium text-gray-700">New Password</label>
+        <div class="mt-1 relative rounded-md shadow-sm">
+            <input type="password" name="newPassword" id="newPassword" class="input-field block w-full pl-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500" placeholder="Enter new password" required>
+        </div>
+    </div>
+
+    <button type="submit" id="setPasswordBtn" class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 transition duration-150 ease-in-out">
+        Set New Password & Sign In
+    </button>
+</form>
                 <div id="error-alert" class="hidden bg-red-50 border-l-4 border-red-400 p-4 mb-4">
                     <div class="flex">
                         <div class="flex-shrink-0">
