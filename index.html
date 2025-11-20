@@ -10,23 +10,19 @@
 
 <title>Monolux | Employee Portal</title>
 
-
-<script>
-
-tailwind.config = {
-
-mode: 'jit',
-
-content: ["./index.html", "./**/*.html"],
-
-}
-
-</script>
-
 <script src="https://cdn.tailwindcss.com"></script>
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js"></script>
+    
+    <script>
+        // Now 'tailwind' is defined, so this won't crash
+        tailwind.config = {
+            mode: 'jit', 
+            content: ["./index.html", "./**/*.html"], 
+        }
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js">
+        
+    </script>
 
 
 
