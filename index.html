@@ -7,15 +7,6 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <script>
-        tailwind.config = {
-            mode: 'jit', 
-            content: ["./index.html", "./**/*.html"], 
-        }
-    </script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
@@ -174,6 +165,15 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js"></script>
+    <script>
+        // Tailwind config moved here as a fallback fix
+        tailwind.config = {
+            mode: 'jit', 
+            content: ["./index.html", "./**/*.html"], 
+        }
+    </script>
+
     <script>
         // ==========================================
         // ⚙️ CONFIGURATION SECTION
@@ -203,14 +203,14 @@
         const userInput = document.getElementById('username');
         const passInput = document.getElementById('password');
         
-        // NEW Challenge UI elements
+        // Challenge UI elements
         const initialLoginForm = document.getElementById('initialLoginForm');
         const newPasswordForm = document.getElementById('newPasswordForm');
         const newPasswordInput = document.getElementById('newPassword');
         const setPasswordBtn = document.getElementById('setPasswordBtn');
         const forgotPasswordLink = document.getElementById('forgotPasswordLink');
 
-        // NEW Forgot Password UI elements
+        // Forgot Password UI elements
         const forgotPasswordForm = document.getElementById('forgotPasswordForm');
         const resetRequestStep = document.getElementById('resetRequestStep');
         const resetConfirmStep = document.getElementById('resetConfirmStep');
@@ -227,8 +227,8 @@
         function updateUI(loading = false, error = null) {
             btnText.textContent = loading ? "Verifying Credentials..." : "Sign In Securely";
             btnSpinner.classList.toggle('hidden', !loading);
-            // This button selector is safe because the main button is inside initialLoginForm 
-            const submitBtn = initialLoginForm.querySelector('button[type="submit"]');
+            
+            const submitBtn = initialLoginForm ? initialLoginForm.querySelector('button[type="submit"]') : null;
             if (submitBtn) {
                 submitBtn.disabled = loading;
             }
@@ -262,6 +262,11 @@
                 return;
             }
 
+            // Hide other forms that might be visible
+            newPasswordForm.classList.add('hidden');
+            forgotPasswordForm.classList.add('hidden');
+            initialLoginForm.classList.remove('hidden'); // Ensure login form is visible while loading
+
             updateUI(true); 
             
             const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
@@ -276,10 +281,10 @@
 
             cognitoUser.authenticateUser(authenticationDetails, {
                 onSuccess: function (result) {
+                    // Authentication was successful!
                     updateUI(false);
                     // Hide the current view and show success
                     initialLoginForm.classList.add('hidden');
-                    forgotPasswordForm.classList.add('hidden');
                     successState.classList.remove('hidden');
                 },
                 onFailure: function (err) {
@@ -297,7 +302,7 @@
                     // Hide login form and show new password form
                     initialLoginForm.classList.add('hidden');
                     newPasswordForm.classList.remove('hidden'); 
-                    // Set the next button text to default state
+                    
                     setPasswordBtn.textContent = "Set New Password & Sign In";
                     setPasswordBtn.disabled = false;
                 },
@@ -342,8 +347,8 @@
             updateUI(false); 
 
             // Switch view from login to reset
-            initialLoginForm.classList.add('hidden');
             newPasswordForm.classList.add('hidden');
+            initialLoginForm.classList.add('hidden');
             forgotPasswordForm.classList.remove('hidden');
             
             // Show the request step first
@@ -406,7 +411,7 @@
                         // Success! Hide the form and show the success state.
                         forgotPasswordForm.classList.add('hidden');
                         successState.classList.remove('hidden');
-                        updateUI(false, "Password successfully reset! You are now logged in.");
+                        updateUI(false);
                     },
                     onFailure: function(err) {
                         confirmResetBtn.textContent = originalText;
