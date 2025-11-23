@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -129,7 +129,7 @@
         </div>
     </div>
 
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js?v=finalfix" defer></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js?v=finalfix"></script>
    
     <script>
         // --- Aggressive Fix: Polling for Global Object Availability ---
@@ -410,8 +410,8 @@
             }
         }
 
-        // Start checking when the DOM is ready
-        document.addEventListener('DOMContentLoaded', checkCognitoAndInit);
+        // Start checking immediately upon script execution.
+        checkCognitoAndInit();
     </script>
 </body>
 </html>
