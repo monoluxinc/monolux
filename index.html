@@ -129,7 +129,7 @@
         </div>
     </div>
 
-   <!-- REVERTED TO THE CORRECT COGNITO IDENTITY JS LIBRARY -->
+   <!-- COGNITO IDENTITY JS LIBRARY -->
    <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js?v=finalfix"></script> 
    
     <script>
@@ -139,6 +139,9 @@
         // that will be called ONLY after the AmazonCognitoIdentity object is found.
         function initializeApp() {
             
+            // Console log to confirm this function is running
+            console.log("APP_INIT: Initializing Monolux application logic."); 
+
             // ==========================================
             // ⚙️ CONFIGURATION SECTION
             // ==========================================
@@ -153,7 +156,6 @@
             };
             
             // The object we need is directly available as AmazonCognitoIdentity
-            // No need for AWS.CognitoIdentity lookup
             const AmazonCognitoIdentity = window.AmazonCognitoIdentity;
             // ==========================================
 
@@ -215,8 +217,19 @@
                 UserPoolId: CONFIG.cognitoUserPoolId,
                 ClientId: CONFIG.cognitoClientId
             };
-            // This line now correctly calls the constructor defined by the specific library
-            const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+            
+            let userPool;
+            try {
+                // This line is prone to failure if the object is still not fully ready
+                userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+                console.log("APP_INIT: Cognito UserPool initialized successfully.");
+
+            } catch(e) {
+                // If the constructor fails, log the error and display it to the user.
+                console.error("APP_INIT_ERROR: Failed to create CognitoUserPool instance.", e);
+                updateUI(false, "Initialization Failed: Please check console for details. (Check Cognito IDs)");
+                return; // Stop initialization if this fails
+            }
             
             // ===========================================
             // 1. MAIN LOGIN HANDLER
@@ -396,8 +409,8 @@
 
         // Polling function to wait for AmazonCognitoIdentity to be defined
         function checkCognitoAndInit() {
-            // Check for the existence of the specific Cognito Identity utility object
-            if (typeof AmazonCognitoIdentity !== 'undefined') {
+            // Check for the existence of the specific Cognito Identity utility object directly on the window
+            if (typeof window.AmazonCognitoIdentity !== 'undefined') {
                 // The object is available, initialize the application
                 initializeApp();
             } else {
