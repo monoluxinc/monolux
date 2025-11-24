@@ -1,329 +1,172 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
    <meta charset="UTF-8">
-
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
    <title>Monolux | Employee Portal</title>
-
    <!-- Tailwind CSS -->
-
    <script src="https://cdn.tailwindcss.com"></script>
-
    <!-- Inter Font -->
-
    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-
    <style>
-
        body {
-
            font-family: 'Inter', sans-serif;
-
            background-color: #111827;
-
            background-image:
-
                radial-gradient(at 0% 0%, hsla(0, 0%, 100%, 0.05) 0px, transparent 50%),
-
                radial-gradient(at 100% 0%, hsla(0, 84%, 45%, 0.1) 0px, transparent 50%);
-
        }
-
        .loader {
-
            border-top-color: #DC2626;
-
            -webkit-animation: spinner 1.5s linear infinite;
-
            animation: spinner 1.5s linear infinite;
-
        }
-
        @keyframes spinner {
-
            0% { transform: rotate(0deg); }
-
            100% { transform: rotate(360deg); }
-
        }
-
        .input-field:focus {
-
            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
-
        }
-
    </style>
-
 </head>
-
 <body class="h-screen w-full flex items-center justify-center px-4">
-
-
-
    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative">
-
        <div class="h-2 w-full bg-red-600"></div>
-
-
-
        <div class="p-8">
-
            <!-- LOGO -->
-
            <div class="text-center mb-8">
-
                <div class="flex justify-center mb-2">
-
                    <div class="h-16 w-16 bg-black text-red-600 flex items-center justify-center rounded-lg transform -skew-x-12 border-2 border-red-600">
-
                         <span class="text-4xl font-extrabold italic transform skew-x-12">K</span>
-
                    </div>
-
                </div>
-
                <h1 class="text-3xl font-bold text-gray-900 tracking-tight">MONOLUX</h1>
-
                <p class="text-sm text-gray-500 uppercase tracking-widest mt-1 font-semibold">Employee Portal</p>
-
            </div>
-
-
-
            <!-- LOGIN FORM -->
-
            <form id="loginForm" class="space-y-6">
-
                <div>
-
                    <label for="username" class="block text-sm font-medium text-gray-700">Employee Username</label>
-
                    <div class="mt-1 relative rounded-md shadow-sm">
-
                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-
                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-
                        </div>
-
                        <input type="text" name="username" id="username" class="input-field block w-full pl-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500" placeholder="Enter your username" required>
-
                    </div>
-
                </div>
-
-
-
                <div>
-
                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-
                    <div class="mt-1 relative rounded-md shadow-sm">
-
                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-
                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-
                        </div>
-
                        <input type="password" name="password" id="password" class="input-field block w-full pl-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500" placeholder="••••••••" required>
-
                    </div>
-
                </div>
-
-
-
                <div class="flex items-center justify-between">
-
                    <div class="flex items-center">
-
                        <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
-
                        <label for="remember-me" class="ml-2 block text-sm text-gray-900">Remember me</label>
-
                    </div>
-
                    <div class="text-sm">
-
                        <a href="#" class="font-medium text-red-600 hover:text-red-500">Forgot password?</a>
-
                    </div>
-
                </div>
-
-
-
                <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition duration-150 ease-in-out">
-
                    <span id="btn-text">Sign In Securely</span>
-
                    <div id="btn-spinner" class="hidden absolute right-4 top-3">
-
                        <div class="loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-5 w-5"></div>
-
                    </div>
-
                </button>
-
            </form>
-
-
-
            <!-- SUCCESS STATE -->
-
            <div id="successState" class="hidden text-center py-4">
-
                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-
                    <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-
                </div>
-
                <h3 class="text-lg leading-6 font-medium text-gray-900">Authentication Successful</h3>
-
                <p class="mt-2 text-sm text-gray-500">Welcome back to the Monolux Workspace.</p>
-
-              
-
-               <div class="mt-6">
-
-                   <!-- The HREF here is handled by the script below -->
-
-                   <a id="airtable-link" href="#" target="_blank" class="w-full flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md text-white bg-red-600 hover:bg-red-700 md:py-4 md:text-lg transition duration-150 ease-in-out shadow-lg">
-
-                       Launch Airtable Database
-
-                       <svg class="ml-2 -mr-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-
-                   </a>
-
-               </div>
-
            </div>
-
        </div>
-
       
-
        <div class="bg-gray-50 px-8 py-4 border-t border-gray-100">
-
            <p class="text-xs text-center text-gray-400">&copy; 2025 Monolux. Internal use only.</p>
-
        </div>
-
    </div>
 
-
-
-   <!-- JAVASCRIPT LOGIC -->
-
+   <!-- AWS Amplify + Cognito + Allowlist Login -->
+   <script src="https://unpkg.com/aws-amplify@5.0.4/dist/aws-amplify.min.js"></script>
    <script>
-
-       // ==========================================
-
-       // ⚙️ CONFIGURATION SECTION
-
-       // ==========================================
-
        const CONFIG = {
-
-           // 1. YOUR AIRTABLE URL (Replace the example below when you have the link)
-
            airtableUrl: "https://airtable.com",
-
-
-
-           // 2. YOUR COGNITO IDs
-
            cognitoUserPoolId: "us-east-2_QQl1TrpJc",
-
-           cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq"
-
+           cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq",
+           allowedUsers: ["dank", "maddiej"] // approved users
        };
 
-       // ==========================================
+       // Configure Amplify
+       const Amplify = window.aws_amplify.Amplify;
+       const Auth = window.aws_amplify.Auth;
 
-
-
-
-
-       // Apply the Airtable Link to the button
-
-       document.getElementById('airtable-link').href = CONFIG.airtableUrl;
-
-
-
-       // Handle Login Submit
-
-       document.getElementById('loginForm').addEventListener('submit', function(e) {
-
-           e.preventDefault();
-
-          
-
-           const btnText = document.getElementById('btn-text');
-
-           const btnSpinner = document.getElementById('btn-spinner');
-
-           const form = document.getElementById('loginForm');
-
-           const successState = document.getElementById('successState');
-
-           const userInput = document.getElementById('username');
-
-           const passInput = document.getElementById('password');
-
-
-
-           // Basic validation
-
-           if(userInput.value && passInput.value) {
-
-              
-
-               // 1. Show Loading State
-
-               btnText.textContent = "Verifying Credentials...";
-
-               btnSpinner.classList.remove('hidden');
-
-              
-
-               // NOTE: The User Pool ID and Client ID are stored in the CONFIG object above.
-
-               // The current code below acts as a visual simulation.
-
-               // To enable *real* AWS authentication, an AWS JavaScript developer
-
-               // will need to add the 'amazon-cognito-identity-js' library here.
-
-
-
-               // 2. Simulate API Delay
-
-               setTimeout(() => {
-
-                   // 3. Hide Form, Show Success
-
-                   form.classList.add('hidden');
-
-                   successState.classList.remove('hidden');
-
-               }, 1500);
-
+       Amplify.configure({
+           Auth: {
+               region: "us-east-2",
+               userPoolId: CONFIG.cognitoUserPoolId,
+               userPoolWebClientId: CONFIG.cognitoClientId,
+               authenticationFlowType: "USER_PASSWORD_AUTH"
            }
-
        });
 
+       async function login(username, password) {
+           if (!CONFIG.allowedUsers.includes(username)) {
+               alert("You are not authorized to log in.");
+               resetButton();
+               return;
+           }
+
+           try {
+               const user = await Auth.signIn(username, password);
+               document.getElementById('loginForm').classList.add('hidden');
+               document.getElementById('successState').classList.remove('hidden');
+               console.log("Login successful:", user);
+
+               // Redirect after showing success
+               setTimeout(() => {
+                   window.location.href = CONFIG.airtableUrl;
+               }, 1200);
+
+           } catch (error) {
+               if (error.code === "UserNotFoundException") {
+                   alert("Username not found.");
+               } else if (error.code === "NotAuthorizedException") {
+                   alert("Incorrect username or password.");
+               } else if (error.code === "UserNotConfirmedException") {
+                   alert("Your account is not confirmed yet.");
+               } else {
+                   alert(`Login failed: ${error.message}`);
+               }
+               console.error(error);
+               resetButton();
+           }
+       }
+
+       function resetButton() {
+           document.getElementById('btn-text').textContent = "Sign In Securely";
+           document.getElementById('btn-spinner').classList.add('hidden');
+       }
+
+       document.getElementById('loginForm').addEventListener('submit', function(e) {
+           e.preventDefault();
+           const username = document.getElementById('username').value;
+           const password = document.getElementById('password').value;
+
+           if (username && password) {
+               document.getElementById('btn-text').textContent = "Verifying Credentials...";
+               document.getElementById('btn-spinner').classList.remove('hidden');
+               login(username, password);
+           }
+       });
    </script>
-
 </body>
-
 </html>
