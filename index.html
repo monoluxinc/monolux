@@ -1,194 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.2/amazon-cognito-identity.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <title>Login</title>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Monolux | Employee Portal</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+   <style>
+       body {
+           font-family: 'Inter', sans-serif;
+           background-color: #111827;
+           background-image:
+               radial-gradient(at 0% 0%, hsla(0, 0%, 100%, 0.05) 0px, transparent 50%),
+               radial-gradient(at 100% 0%, hsla(0, 84%, 45%, 0.1) 0px, transparent 50%);
+       }
+       .loader {
+           border-top-color: #DC2626;
+           -webkit-animation: spinner 1.5s linear infinite;
+           animation: spinner 1.5s linear infinite;
+       }
+       @keyframes spinner {
+           0% { transform: rotate(0deg); }
+           100% { transform: rotate(360deg); }
+       }
+       .input-field:focus {
+           box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+       }
+   </style>
 </head>
+<body class="h-screen w-full flex items-center justify-center px-4">
 
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+   <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative">
+       <div class="h-2 w-full bg-red-600"></div>
 
-  <!-- LOGIN CARD -->
-  <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-    <h2 class="text-2xl font-bold text-center mb-6">Sign In</h2>
+       <div class="p-8">
+                      <div class="text-center mb-8">
+               <div class="flex justify-center mb-2">
+                   <div class="h-16 w-16 bg-black text-red-600 flex items-center justify-center rounded-lg transform -skew-x-12 border-2 border-red-600">
+                        <span class="text-4xl font-extrabold italic transform skew-x-12">K</span>
+                   </div>
+               </div>
+               <h1 class="text-3xl font-bold text-gray-900 tracking-tight">MONOLUX</h1>
+               <p class="text-sm text-gray-500 uppercase tracking-widest mt-1 font-semibold">Employee Portal</p>
+           </div>
 
-    <!-- ERROR BOX -->
-    <div id="errorAlert" class="hidden bg-red-100 text-red-700 px-4 py-3 rounded mb-4"></div>
+                      <form id="loginForm" class="space-y-6">
+               <div>
+                   <label for="username" class="block text-sm font-medium text-gray-700">Employee Username</label>
+                   <div class="mt-1 relative rounded-md shadow-sm">
+                       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                           <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                       </div>
+                       <input type="text" name="username" id="username" class="input-field block w-full pl-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500" placeholder="Enter your username" required>
+                   </div>
+               </div>
 
-    <!-- LOGIN FORM -->
-    <form id="loginForm" class="space-y-4">
-      <div>
-        <label class="block mb-1 font-medium">Email</label>
-        <input id="username" type="email" required class="w-full border px-3 py-2 rounded" placeholder="email@example.com" />
-      </div>
+               <div>
+                   <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                   <div class="mt-1 relative rounded-md shadow-sm">
+                       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                           <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                       </div>
+                       <input type="password" name="password" id="password" class="input-field block w-full pl-10 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500" placeholder="••••••••" required>
+                   </div>
+               </div>
 
-      <div>
-        <label class="block mb-1 font-medium">Password</label>
-        <input id="password" type="password" required class="w-full border px-3 py-2 rounded" placeholder="Password" />
-      </div>
+               <div class="flex items-center justify-between">
+                   <div class="flex items-center">
+                       <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                       <label for="remember-me" class="ml-2 block text-sm text-gray-900">Remember me</label>
+                   </div>
+                   <div class="text-sm">
+                       <a href="#" class="font-medium text-red-600 hover:text-red-500">Forgot password?</a>
+                   </div>
+               </div>
 
-      <button id="signInBtn" type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-        Sign In
-      </button>
-    </form>
+               <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition duration-150 ease-in-out">
+                   <span id="btn-text">Sign In Securely</span>
+                   <div id="btn-spinner" class="hidden absolute right-4 top-3">
+                       <div class="loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-5 w-5"></div>
+                   </div>
+               </button>
+           </form>
 
-    <!-- FORGOT PASSWORD LINK -->
-    <p class="text-center mt-4">
-      <button id="forgotPasswordBtn" class="text-blue-600 hover:underline">Forgot password?</button>
-    </p>
+                      <div id="successState" class="hidden text-center py-4">
+               <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                   <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+               </div>
+               <h3 class="text-lg leading-6 font-medium text-gray-900">Authentication Successful</h3>
+               <p class="mt-2 text-sm text-gray-500">Welcome back to the Monolux Workspace.</p>
+              
+               <div class="mt-6">
+                                      <a id="airtable-link" href="#" target="_blank" class="w-full flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-md text-white bg-red-600 hover:bg-red-700 md:py-4 md:text-lg transition duration-150 ease-in-out shadow-lg">
+                       Launch Airtable Database
+                       <svg class="ml-2 -mr-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                   </a>
+               </div>
+           </div>
+       </div>
+      
+       <div class="bg-gray-50 px-8 py-4 border-t border-gray-100">
+           <p class="text-xs text-center text-gray-400">&copy; 2025 Monolux. Internal use only.</p>
+       </div>
+   </div>
 
-    <!-- FORCE NEW PASSWORD -->
-    <div id="newPasswordSection" class="hidden mt-6">
-      <h3 class="text-lg font-semibold mb-2">Set a New Password</h3>
+      <script>
+       // ==========================================
+       // ⚙️ CONFIGURATION SECTION
+       // ==========================================
+       const CONFIG = {
+           // 1. YOUR AIRTABLE URL (Replace the example below when you have the link)
+           airtableUrl: "https://airtable.com",
 
-      <input id="newPassword" type="password" disabled required
-        class="w-full border px-3 py-2 rounded mb-3"
-        placeholder="New password" />
+           // 2. YOUR COGNITO IDs
+           cognitoUserPoolId: "us-east-2_QQl1TrpJc",
+           cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq"
+       };
+       // ==========================================
 
-      <button id="changePasswordBtn"
-        class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">
-        Update Password
-      </button>
-    </div>
 
-    <!-- FORGOT PASSWORD STEPS -->
-    <div id="forgotSection" class="hidden mt-6">
+       // Apply the Airtable Link to the button
+       document.getElementById('airtable-link').href = CONFIG.airtableUrl;
 
-      <!-- Step 1 -->
-      <div id="forgotStep1">
-        <h3 class="text-lg font-semibold mb-2">Reset Your Password</h3>
-        <input id="forgotEmail" type="email" class="w-full border px-3 py-2 rounded mb-3" placeholder="Enter your email" />
-        <button id="sendCodeBtn" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Send Code</button>
-      </div>
+       // Handle Login Submit
+       document.getElementById('loginForm').addEventListener('submit', function(e) {
+           e.preventDefault();
+          
+           const btnText = document.getElementById('btn-text');
+           const btnSpinner = document.getElementById('btn-spinner');
+           const form = document.getElementById('loginForm');
+           const successState = document.getElementById('successState');
+           const userInput = document.getElementById('username');
+           const passInput = document.getElementById('password');
 
-      <!-- Step 2 -->
-      <div id="forgotStep2" class="hidden">
-        <h3 class="text-lg font-semibold mb-2">Enter Verification Code</h3>
-        <input id="verifyCode" type="text" class="w-full border px-3 py-2 rounded mb-3" placeholder="Code" />
-        <input id="resetNewPassword" type="password" class="w-full border px-3 py-2 rounded mb-3" placeholder="New password" />
-        <button id="confirmResetBtn" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Reset Password</button>
-      </div>
-    </div>
+           // Basic validation
+           if(userInput.value && passInput.value) {
+              
+               // 1. Show Loading State
+               btnText.textContent = "Verifying Credentials...";
+               btnSpinner.classList.remove('hidden');
+              
+               // NOTE: The current code below acts as a visual simulation.
 
-  </div>
-
-  <script>
-    // COGNITO CONFIG
-    const poolData = {
-      UserPoolId: "us-east-2_QQl1TrpJc",
-      ClientId: "69o0f3ij9bsvubrcgkqat8pccq",
-    };
-
-    const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
-
-    // ELEMENTS
-    const loginForm = document.getElementById("loginForm");
-    const username = document.getElementById("username");
-    const password = document.getElementById("password");
-    const signInBtn = document.getElementById("signInBtn");
-    const errorAlert = document.getElementById("errorAlert");
-
-    const newPasswordSection = document.getElementById("newPasswordSection");
-    const newPassword = document.getElementById("newPassword");
-    const changePasswordBtn = document.getElementById("changePasswordBtn");
-
-    const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
-    const forgotSection = document.getElementById("forgotSection");
-    const forgotStep1 = document.getElementById("forgotStep1");
-    const forgotStep2 = document.getElementById("forgotStep2");
-    const forgotEmail = document.getElementById("forgotEmail");
-    const sendCodeBtn = document.getElementById("sendCodeBtn");
-    const verifyCode = document.getElementById("verifyCode");
-    const resetNewPassword = document.getElementById("resetNewPassword");
-    const confirmResetBtn = document.getElementById("confirmResetBtn");
-
-    let cognitoUser;
-
-    function showError(message) {
-      errorAlert.textContent = message;
-      errorAlert.classList.remove("hidden");
-    }
-
-    // LOGIN
-    loginForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      errorAlert.classList.add("hidden");
-
-      const authData = new AmazonCognitoIdentity.AuthenticationDetails({
-        Username: username.value,
-        Password: password.value,
-      });
-
-      cognitoUser = new AmazonCognitoIdentity.CognitoUser({
-        Username: username.value,
-        Pool: userPool,
-      });
-
-      cognitoUser.authenticateUser(authData, {
-        onSuccess: () => {
-          window.location.href = "https://airtable.com/";
-        },
-        onFailure: (err) => {
-          showError(err.message || JSON.stringify(err));
-        },
-        newPasswordRequired: () => {
-          newPasswordSection.classList.remove("hidden");
-          newPassword.disabled = false;
-        },
-      });
-    });
-
-    // FORCE CHANGE PASSWORD
-    changePasswordBtn.addEventListener("click", () => {
-      if (!newPassword.value) return showError("Password required");
-
-      cognitoUser.completeNewPasswordChallenge(newPassword.value, {}, {
-        onSuccess: () => {
-          window.location.href = "https://airtable.com/";
-        },
-        onFailure: (err) => showError(err.message),
-      });
-    });
-
-    // FORGOT PASSWORD
-    forgotPasswordBtn.addEventListener("click", () => {
-      forgotSection.classList.remove("hidden");
-      forgotStep1.classList.remove("hidden");
-      forgotStep2.classList.add("hidden");
-    });
-
-    sendCodeBtn.addEventListener("click", () => {
-      const email = forgotEmail.value;
-      if (!email) return showError("Enter your email");
-
-      const user = new AmazonCognitoIdentity.CognitoUser({ Username: email, Pool: userPool });
-
-      user.forgotPassword({
-        onSuccess: () => {},
-        onFailure: (err) => showError(err.message),
-        inputVerificationCode: () => {
-          forgotStep1.classList.add("hidden");
-          forgotStep2.classList.remove("hidden");
-        },
-      });
-
-      // store for step 2
-      window._resetUser = user;
-    });
-
-    confirmResetBtn.addEventListener("click", () => {
-      const code = verifyCode.value;
-      const newPass = resetNewPassword.value;
-
-      window._resetUser.confirmPassword(code, newPass, {
-        onSuccess: () => alert("Password reset! You can sign in now."),
-        onFailure: (err) => showError(err.message),
-      });
-    });
-  </script>
+               // 2. Simulate API Delay
+               setTimeout(() => {
+                   // 3. Hide Form, Show Success
+                   form.classList.add('hidden');
+                   successState.classList.remove('hidden');
+               }, 1500);
+           }
+       });
+   </script>
 </body>
 </html>
-
-
