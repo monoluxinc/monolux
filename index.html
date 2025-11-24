@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Monolux | Employee Portal</title>
 
-  <!-- Tailwind CDN (ok for dev/testing; for production compile Tailwind). -->
+  <!-- Dev-only Tailwind CDN (ok for testing). For production, compile Tailwind per docs. -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -36,8 +36,8 @@
         <p class="text-sm text-gray-500 uppercase tracking-widest mt-1 font-semibold">Employee Portal</p>
       </div>
 
-      <!-- ALERT -->
-      <div id="error-alert" class="hidden bg-red-50 border-l-4 border-red-400 p-4 mb-4" role="alert">
+      <!-- ERROR ALERT -->
+      <div id="error-alert" class="hidden bg-red-50 border-l-4 border-red-400 p-4 mb-4" role="alert" aria-live="assertive">
         <div class="flex">
           <div class="flex-shrink-0">
             <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -50,7 +50,7 @@
         </div>
       </div>
 
-      <!-- MAIN FORM (novalidate to avoid native validation preventing controlled flows) -->
+      <!-- MAIN FORM -->
       <form id="loginForm" class="space-y-6" novalidate>
 
         <!-- INITIAL LOGIN -->
@@ -89,7 +89,7 @@
             </div>
           </div>
 
-          <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition duration-150 ease-in-out">
+          <button type="submit" id="signinBtn" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition duration-150 ease-in-out">
             <span id="btn-text">Sign In Securely</span>
             <div id="btn-spinner" class="hidden absolute right-4 top-3">
               <div class="loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-5 w-5"></div>
@@ -98,8 +98,7 @@
         </div>
 
         <!-- NEW PASSWORD (FOR FORCE_CHANGE_PASSWORD) -->
-        <!-- Note: keep 'name' attributes if needed but disabled while hidden to avoid browser validation blocking -->
-        <div id="newPasswordForm" class="space-y-6 hidden">
+        <div id="newPasswordForm" class="space-y-6 hidden" aria-hidden="true">
           <p class="text-sm font-medium text-gray-700 text-center bg-yellow-100 p-3 rounded-lg border border-yellow-200">
             🔑 Your password must be updated. Please set a new one.
           </p>
@@ -107,6 +106,7 @@
           <div>
             <label for="newPassword" class="block text-sm font-medium text-gray-700">New Password</label>
             <div class="mt-1 relative rounded-md shadow-sm">
+              <!-- disabled while hidden to avoid browser blocking form submission -->
               <input type="password" name="newPassword" id="newPassword" class="input-field block w-full pl-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500" placeholder="Enter new password" required disabled>
             </div>
           </div>
@@ -117,7 +117,7 @@
         </div>
 
         <!-- FORGOT PASSWORD (Two-step) -->
-        <div id="forgotPasswordForm" class="space-y-6 hidden">
+        <div id="forgotPasswordForm" class="space-y-6 hidden" aria-hidden="true">
           <!-- Step 1: Request code -->
           <div id="resetRequestStep" class="space-y-4">
             <p class="text-sm text-gray-600">Enter your username to receive a reset code.</p>
@@ -151,6 +151,7 @@
             <div>
               <label for="finalNewPassword" class="block text-sm font-medium text-gray-700">New Password</label>
               <div class="mt-1">
+                <!-- disabled until user reaches confirm step -->
                 <input type="password" name="finalNewPassword" id="finalNewPassword" class="input-field block w-full pl-3 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500" placeholder="Enter new password" required disabled>
               </div>
             </div>
@@ -168,7 +169,7 @@
 
       </form>
 
-      <!-- SUCCESS STATE -->
+      <!-- SUCCESS -->
       <div id="successState" class="hidden text-center py-4">
         <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
           <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,20 +186,29 @@
     </div>
   </div>
 
-  <!-- Cognito SDK (kept as you had it) -->
+  <!-- Cognito SDK -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js?v=finalfix"></script>
 
   <script>
-    // Main initialization wrapped to wait for the Cognito library
-    function initializeApp() {
-      console.log("APP_INIT: initializeApp running");
+    // YOUR CONFIG (using the IDs you provided)
+    const CONFIG = {
+      airtableUrl: "https://airtable.com/", // change to desired redirect destination
+      region: "us-east-2",
+      cognitoUserPoolId: "us-east-2_QQl1TrpJc",
+      cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq"
+    };
 
-      const CONFIG = {
-        airtableUrl: "https://airtable.com/",   // change to your actual destination
-        region: "us-east-2",
-        cognitoUserPoolId: "us-east-2_QQl1TrpJc",
-        cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq"
-      };
+    // Wait for Cognito SDK to be available, then init
+    (function waitAndInit() {
+      if (typeof window.AmazonCognitoIdentity !== 'undefined') {
+        initializeApp();
+      } else {
+        setTimeout(waitAndInit, 50);
+      }
+    })();
+
+    function initializeApp() {
+      console.log("APP_INIT: initializing");
 
       const AmazonCognitoIdentity = window.AmazonCognitoIdentity;
       if (!AmazonCognitoIdentity) {
@@ -206,24 +216,22 @@
         return;
       }
 
-      // DOM references
+      // DOM refs
       const btnText = document.getElementById('btn-text');
       const btnSpinner = document.getElementById('btn-spinner');
       const form = document.getElementById('loginForm');
-      const successState = document.getElementById('successState');
       const errorAlert = document.getElementById('error-alert');
       const errorMessage = document.getElementById('error-message');
 
       const userInput = document.getElementById('username');
       const passInput = document.getElementById('password');
-
       const initialLoginForm = document.getElementById('initialLoginForm');
+
       const newPasswordForm = document.getElementById('newPasswordForm');
       const newPasswordInput = document.getElementById('newPassword');
       const setPasswordBtn = document.getElementById('setPasswordBtn');
-      const forgotPasswordLink = document.getElementById('forgotPasswordLink');
 
-      // Forgot password DOM
+      const forgotPasswordLink = document.getElementById('forgotPasswordLink');
       const forgotPasswordForm = document.getElementById('forgotPasswordForm');
       const resetRequestStep = document.getElementById('resetRequestStep');
       const resetConfirmStep = document.getElementById('resetConfirmStep');
@@ -234,24 +242,22 @@
       const confirmResetBtn = document.getElementById('confirmResetBtn');
       const cancelRequestBtn = document.getElementById('cancelRequestBtn');
       const backToRequestBtn = document.getElementById('backToRequestBtn');
+      const signinBtn = document.getElementById('signinBtn');
+      const successState = document.getElementById('successState');
 
       let cognitoUser = null;
       let userAttributes = {};
 
-      // Safe update UI (won't throw if elements are missing)
-      function updateUI(loading = false, error = null) {
+      // Safe UI updater
+      function updateUI(loading = false, err = null) {
         btnText.textContent = loading ? "Verifying Credentials..." : "Sign In Securely";
         btnSpinner.classList.toggle('hidden', !loading);
 
-        // select the submit button in the initial login form reliably
-        const submitBtn = document.querySelector('#initialLoginForm button[type="submit"]');
-        if (submitBtn) submitBtn.disabled = loading;
-
-        // disable set password button if loading
+        if (signinBtn) signinBtn.disabled = loading;
         if (setPasswordBtn) setPasswordBtn.disabled = loading;
 
-        if (error) {
-          errorMessage.textContent = error;
+        if (err) {
+          errorMessage.textContent = err;
           errorAlert.classList.remove('hidden');
         } else {
           errorAlert.classList.add('hidden');
@@ -260,29 +266,46 @@
 
       updateUI(false);
 
-      // Initialize Cognito user pool
-      const poolData = { UserPoolId: CONFIG.cognitoUserPoolId, ClientId: CONFIG.cognitoClientId };
+      // Create user pool
       let userPool;
       try {
-        userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
-        console.log("Cognito UserPool created");
+        userPool = new AmazonCognitoIdentity.CognitoUserPool({
+          UserPoolId: CONFIG.cognitoUserPoolId,
+          ClientId: CONFIG.cognitoClientId
+        });
       } catch (e) {
         console.error("Failed to create CognitoUserPool", e);
-        updateUI(false, "Initialization failed. Check Cognito IDs in config (console).");
+        updateUI(false, "Initialization failed (check Cognito IDs).");
         return;
       }
 
-      // --- LOGIN SUBMIT ---
+      // Ensure hidden inputs are disabled to avoid native validation blocking
+      function ensureDisabledWhileHidden() {
+        if (!newPasswordForm || newPasswordForm.classList.contains('hidden')) {
+          if (newPasswordInput) newPasswordInput.disabled = true;
+          if (setPasswordBtn) setPasswordBtn.disabled = true;
+        }
+        if (!resetConfirmStep || resetConfirmStep.classList.contains('hidden')) {
+          if (finalNewPasswordInput) finalNewPasswordInput.disabled = true;
+        }
+      }
+      ensureDisabledWhileHidden();
+
+      // LOGIN SUBMIT
       form.addEventListener('submit', function (ev) {
         ev.preventDefault();
         updateUI(false);
 
-        // Hide any challenge forms and ensure inputs are disabled to avoid browser validation
-        newPasswordForm.classList.add('hidden');
-        newPasswordInput.disabled = true;
-        setPasswordBtn.disabled = true;
-
-        forgotPasswordForm.classList.add('hidden');
+        // Hide other panels
+        if (newPasswordForm) {
+          newPasswordForm.classList.add('hidden');
+          newPasswordForm.setAttribute('aria-hidden', 'true');
+        }
+        if (forgotPasswordForm) {
+          forgotPasswordForm.classList.add('hidden');
+          forgotPasswordForm.setAttribute('aria-hidden', 'true');
+        }
+        ensureDisabledWhileHidden();
 
         const username = (userInput && userInput.value || "").trim();
         const password = (passInput && passInput.value || "");
@@ -304,24 +327,30 @@
         cognitoUser.authenticateUser(authenticationDetails, {
           onSuccess: function (result) {
             updateUI(false);
-            successState.classList.remove('hidden');
-            // Redirect to the configured destination
+            if (successState) successState.classList.remove('hidden');
+            // Redirect after success
             window.location.href = CONFIG.airtableUrl;
           },
           onFailure: function (err) {
             updateUI(false, err && err.message ? err.message : "Authentication failed.");
           },
-          newPasswordRequired: function (userAttributesFromCognito, requiredAttributes) {
-            // Save attributes; show new password UI
-            userAttributes = userAttributesFromCognito || {};
+          newPasswordRequired: function (attributes, requiredAttributes) {
+            // show new password UI
+            userAttributes = attributes || {};
             updateUI(false);
-            initialLoginForm.classList.add('hidden');
-            newPasswordForm.classList.remove('hidden');
-
-            // enable the new password input and button
-            newPasswordInput.disabled = false;
-            setPasswordBtn.disabled = false;
-            setPasswordBtn.textContent = "Set New Password & Sign In";
+            if (initialLoginForm) initialLoginForm.classList.add('hidden');
+            if (newPasswordForm) {
+              newPasswordForm.classList.remove('hidden');
+              newPasswordForm.setAttribute('aria-hidden', 'false');
+            }
+            if (newPasswordInput) {
+              newPasswordInput.disabled = false;
+              newPasswordInput.focus();
+            }
+            if (setPasswordBtn) {
+              setPasswordBtn.disabled = false;
+              setPasswordBtn.textContent = "Set New Password & Sign In";
+            }
           },
           mfaRequired: function () {
             updateUI(false, "MFA required — not supported in this demo.");
@@ -329,17 +358,17 @@
         });
       });
 
-      // --- COMPLETE NEW PASSWORD ---
+      // COMPLETE NEW PASSWORD
       if (setPasswordBtn) {
         setPasswordBtn.addEventListener('click', function () {
-          const newPassword = newPasswordInput.value || "";
-          if (!newPassword) {
+          const newPass = (newPasswordInput && newPasswordInput.value || "").trim();
+          if (!newPass) {
             updateUI(false, "New password cannot be empty.");
             return;
           }
 
-          setPasswordBtn.textContent = "Setting Password...";
           setPasswordBtn.disabled = true;
+          setPasswordBtn.textContent = "Setting Password...";
           updateUI(true);
 
           if (!cognitoUser) {
@@ -349,77 +378,71 @@
             return;
           }
 
-          cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, {
-            onSuccess: function (sessionResult) {
+          cognitoUser.completeNewPasswordChallenge(newPass, userAttributes, {
+            onSuccess: function () {
               updateUI(false);
-              newPasswordForm.classList.add('hidden');
-              successState.classList.remove('hidden');
-              // redirect
+              if (newPasswordForm) newPasswordForm.classList.add('hidden');
+              if (successState) successState.classList.remove('hidden');
               window.location.href = CONFIG.airtableUrl;
             },
             onFailure: function (err) {
-              setPasswordBtn.textContent = "Set New Password & Sign In";
               setPasswordBtn.disabled = false;
+              setPasswordBtn.textContent = "Set New Password & Sign In";
               updateUI(false, err && err.message ? err.message : "Failed to set new password.");
             }
           });
         });
       }
 
-      // --- FORGOT PASSWORD FLOW UI HANDLERS ---
+      // FORGOT PASSWORD FLOW
       if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', function (e) {
           e.preventDefault();
           updateUI(false);
 
-          // Hide login/newPassword and show forgot password
-          initialLoginForm.classList.add('hidden');
-          newPasswordForm.classList.add('hidden');
-          newPasswordInput.disabled = true;
-          setPasswordBtn.disabled = true;
+          if (initialLoginForm) initialLoginForm.classList.add('hidden');
+          if (newPasswordForm) newPasswordForm.classList.add('hidden');
+          if (forgotPasswordForm) {
+            forgotPasswordForm.classList.remove('hidden');
+            forgotPasswordForm.setAttribute('aria-hidden', 'false');
+          }
+          // show request step
+          if (resetRequestStep) resetRequestStep.classList.remove('hidden');
+          if (resetConfirmStep) resetConfirmStep.classList.add('hidden');
 
-          forgotPasswordForm.classList.remove('hidden');
-          resetRequestStep.classList.remove('hidden');
-          resetConfirmStep.classList.add('hidden');
-
-          // reset any previous values
+          // reset fields
           if (resetUsernameInput) resetUsernameInput.value = "";
           if (verificationCodeInput) verificationCodeInput.value = "";
           if (finalNewPasswordInput) finalNewPasswordInput.value = "";
-
-          // ensure confirm-stage password input is disabled until we reach that step
-          if (finalNewPasswordInput) finalNewPasswordInput.disabled = true;
+          ensureDisabledWhileHidden();
         });
       }
 
-      // Cancel request -> back to initial login form
       if (cancelRequestBtn) {
         cancelRequestBtn.addEventListener('click', function () {
-          forgotPasswordForm.classList.add('hidden');
-          initialLoginForm.classList.remove('hidden');
-          if (resetUsernameInput) resetUsernameInput.value = "";
+          if (forgotPasswordForm) forgotPasswordForm.classList.add('hidden');
+          if (initialLoginForm) initialLoginForm.classList.remove('hidden');
+          ensureDisabledWhileHidden();
         });
       }
 
-      // Back from confirm step -> request step
       if (backToRequestBtn) {
         backToRequestBtn.addEventListener('click', function () {
-          resetConfirmStep.classList.add('hidden');
-          resetRequestStep.classList.remove('hidden');
-          if (verificationCodeInput) verificationCodeInput.value = "";
+          if (resetConfirmStep) resetConfirmStep.classList.add('hidden');
+          if (resetRequestStep) resetRequestStep.classList.remove('hidden');
           if (finalNewPasswordInput) {
-            finalNewPasswordInput.value = "";
             finalNewPasswordInput.disabled = true;
+            finalNewPasswordInput.value = "";
           }
         });
       }
 
-      // Send reset code
+      // REQUEST RESET CODE
       if (requestCodeBtn) {
         requestCodeBtn.addEventListener('click', function () {
           const username = (resetUsernameInput && resetUsernameInput.value || "").trim();
           if (!username) {
-            updateUI(false, "Please enter your username to receive a reset code.");
+            updateUI(false, "Please enter your username.");
             return;
           }
 
@@ -428,15 +451,17 @@
 
           const tempUser = new AmazonCognitoIdentity.CognitoUser({ Username: username, Pool: userPool });
           tempUser.forgotPassword({
-            onSuccess: function (data) {
-              // show confirm step
+            onSuccess: function () {
               requestCodeBtn.disabled = false;
               requestCodeBtn.textContent = "Send Reset Code";
-              resetRequestStep.classList.add('hidden');
-              resetConfirmStep.classList.remove('hidden');
 
-              // enable final password input for the confirm step
-              if (finalNewPasswordInput) finalNewPasswordInput.disabled = false;
+              if (resetRequestStep) resetRequestStep.classList.add('hidden');
+              if (resetConfirmStep) resetConfirmStep.classList.remove('hidden');
+
+              if (finalNewPasswordInput) {
+                finalNewPasswordInput.disabled = false;
+                finalNewPasswordInput.focus();
+              }
             },
             onFailure: function (err) {
               requestCodeBtn.disabled = false;
@@ -447,15 +472,15 @@
         });
       }
 
-      // Confirm reset with code and new password
+      // CONFIRM RESET
       if (confirmResetBtn) {
         confirmResetBtn.addEventListener('click', function () {
           const username = (resetUsernameInput && resetUsernameInput.value || "").trim();
           const code = (verificationCodeInput && verificationCodeInput.value || "").trim();
-          const newPassword = (finalNewPasswordInput && finalNewPasswordInput.value || "");
+          const newPass = (finalNewPasswordInput && finalNewPasswordInput.value || "").trim();
 
-          if (!username || !code || !newPassword) {
-            updateUI(false, "Please provide username, code, and new password.");
+          if (!username || !code || !newPass) {
+            updateUI(false, "Please provide username, code and new password.");
             return;
           }
 
@@ -463,16 +488,18 @@
           confirmResetBtn.textContent = "Changing...";
 
           const tempUser = new AmazonCognitoIdentity.CognitoUser({ Username: username, Pool: userPool });
-          tempUser.confirmPassword(code, newPassword, {
+          tempUser.confirmPassword(code, newPass, {
             onSuccess: function () {
               confirmResetBtn.disabled = false;
               confirmResetBtn.textContent = "Confirm & Sign In";
               updateUI(false);
+
               // return to login with username pre-filled
-              forgotPasswordForm.classList.add('hidden');
-              initialLoginForm.classList.remove('hidden');
+              if (forgotPasswordForm) forgotPasswordForm.classList.add('hidden');
+              if (initialLoginForm) initialLoginForm.classList.remove('hidden');
               if (userInput) userInput.value = username;
               if (passInput) passInput.value = "";
+              ensureDisabledWhileHidden();
             },
             onFailure: function (err) {
               confirmResetBtn.disabled = false;
@@ -483,28 +510,8 @@
         });
       }
 
-      // A small UX nicety: when we show the initial login form again, ensure the newPassword hidden inputs are disabled
-      // (prevents browser native validation from blocking form submission)
-      function ensureHiddenFieldsDisabled() {
-        if (newPasswordForm.classList.contains('hidden')) {
-          newPasswordInput.disabled = true;
-          setPasswordBtn.disabled = true;
-        }
-        if (resetConfirmStep && resetConfirmStep.classList.contains('hidden')) {
-          finalNewPasswordInput.disabled = true;
-        }
-      }
-      ensureHiddenFieldsDisabled();
-    } // end initializeApp
-
-    // Poll for the Cognito library, then init
-    (function waitForCognito() {
-      if (typeof window.AmazonCognitoIdentity !== 'undefined') {
-        initializeApp();
-      } else {
-        setTimeout(waitForCognito, 50);
-      }
-    })();
+    } // initializeApp end
   </script>
 </body>
 </html>
+
