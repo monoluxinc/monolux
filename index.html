@@ -100,68 +100,67 @@
 
    <!-- Custom Login Script -->
    <script>
-       window.onload = function() {
-           const { Amplify, Auth } = window.aws_amplify;
+       // ✅ Custom script runs after Amplify is loaded
+       const { Amplify, Auth } = window.aws_amplify;
 
-           const CONFIG = {
-               airtableUrl: "https://airtable.com",
-               cognitoUserPoolId: "us-east-2_QQl1TrpJc",
-               cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq",
-               allowedUsers: ["dank", "maddiej"]
-           };
+       const CONFIG = {
+           airtableUrl: "https://airtable.com",
+           cognitoUserPoolId: "us-east-2_QQl1TrpJc",
+           cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq",
+           allowedUsers: ["dank", "maddiej"]
+       };
 
-           Amplify.configure({
-               Auth: {
-                   region: "us-east-2",
-                   userPoolId: CONFIG.cognitoUserPoolId,
-                   userPoolWebClientId: CONFIG.cognitoClientId,
-                   authenticationFlowType: "USER_PASSWORD_AUTH"
-               }
-           });
+       Amplify.configure({
+           Auth: {
+               region: "us-east-2",
+               userPoolId: CONFIG.cognitoUserPoolId,
+               userPoolWebClientId: CONFIG.cognitoClientId,
+               authenticationFlowType: "USER_PASSWORD_AUTH"
+           }
+       });
 
-           async function login(username, password) {
-               if (!CONFIG.allowedUsers.includes(username)) {
-                   alert("You are not authorized to log in.");
-                   resetButton();
-                   return;
-               }
-
-               try {
-                   const user = await Auth.signIn(username, password);
-                   document.getElementById('loginForm').classList.add('hidden');
-                   document.getElementById('successState').classList.remove('hidden');
-
-                   setTimeout(() => {
-                       window.location.href = CONFIG.airtableUrl;
-                   }, 1200);
-
-               } catch (error) {
-                   if (error.code === "UserNotFoundException") alert("Username not found.");
-                   else if (error.code === "NotAuthorizedException") alert("Incorrect username or password.");
-                   else if (error.code === "UserNotConfirmedException") alert("Your account is not confirmed yet.");
-                   else alert(`Login failed: ${error.message}`);
-                   console.error(error);
-                   resetButton();
-               }
+       async function login(username, password) {
+           if (!CONFIG.allowedUsers.includes(username)) {
+               alert("You are not authorized to log in.");
+               resetButton();
+               return;
            }
 
-           function resetButton() {
-               document.getElementById('btn-text').textContent = "Sign In Securely";
-               document.getElementById('btn-spinner').classList.add('hidden');
+           try {
+               const user = await Auth.signIn(username, password);
+               document.getElementById('loginForm').classList.add('hidden');
+               document.getElementById('successState').classList.remove('hidden');
+
+               setTimeout(() => {
+                   window.location.href = CONFIG.airtableUrl;
+               }, 1200);
+
+           } catch (error) {
+               if (error.code === "UserNotFoundException") alert("Username not found.");
+               else if (error.code === "NotAuthorizedException") alert("Incorrect username or password.");
+               else if (error.code === "UserNotConfirmedException") alert("Your account is not confirmed yet.");
+               else alert(`Login failed: ${error.message}`);
+               console.error(error);
+               resetButton();
            }
-
-           document.getElementById('loginForm').addEventListener('submit', function(e) {
-               e.preventDefault();
-               const username = document.getElementById('username').value;
-               const password = document.getElementById('password').value;
-
-               if (username && password) {
-                   document.getElementById('btn-text').textContent = "Verifying Credentials...";
-                   document.getElementById('btn-spinner').classList.remove('hidden');
-                   login(username, password);
-               }
-           });
        }
+
+       function resetButton() {
+           document.getElementById('btn-text').textContent = "Sign In Securely";
+           document.getElementById('btn-spinner').classList.add('hidden');
+       }
+
+       document.getElementById('loginForm').addEventListener('submit', function(e) {
+           e.preventDefault();
+           const username = document.getElementById('username').value;
+           const password = document.getElementById('password').value;
+
+           if (username && password) {
+               document.getElementById('btn-text').textContent = "Verifying Credentials...";
+               document.getElementById('btn-spinner').classList.remove('hidden');
+               login(username, password);
+           }
+       });
    </script>
 </body>
 </html>
