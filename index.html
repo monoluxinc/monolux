@@ -129,7 +129,8 @@
         </div>
     </div>
 
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js?v=finalfix"></script>
+   <!-- REVERTED TO THE CORRECT COGNITO IDENTITY JS LIBRARY -->
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js?v=finalfix"></script> 
    
     <script>
         // --- Aggressive Fix: Polling for Global Object Availability ---
@@ -146,10 +147,14 @@
                 airtableUrl: "https://airtable.com/", 
 
                 // 2. YOUR COGNITO IDs (These must be real for the login to work)
-                region: "us-east-2", // IMPORTANT: Set your AWS Region
+                region: "us-east-2", 
                 cognitoUserPoolId: "us-east-2_QQl1TrpJc",
                 cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq"
             };
+            
+            // The object we need is directly available as AmazonCognitoIdentity
+            // No need for AWS.CognitoIdentity lookup
+            const AmazonCognitoIdentity = window.AmazonCognitoIdentity;
             // ==========================================
 
             // Global state for Cognito User Object during challenges
@@ -210,7 +215,7 @@
                 UserPoolId: CONFIG.cognitoUserPoolId,
                 ClientId: CONFIG.cognitoClientId
             };
-            // This is the first line to use AmazonCognitoIdentity
+            // This line now correctly calls the constructor defined by the specific library
             const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
             
             // ===========================================
@@ -250,10 +255,6 @@
                         updateUI(false);
                         // >>> REDIRECT ADDED HERE <<<
                         window.location.href = CONFIG.airtableUrl;
-                        
-                        // The following lines were removed as the user is now redirected immediately:
-                        // initialLoginForm.classList.add('hidden');
-                        // successState.classList.remove('hidden');
                     },
                     onFailure: function (err) {
                         let message = err.message || "An unknown error occurred.";
@@ -299,9 +300,6 @@
                             newPasswordForm.classList.add('hidden'); // Still good for cleanup
                             // >>> REDIRECT ADDED HERE <<<
                             window.location.href = CONFIG.airtableUrl;
-                            
-                            // The following line was removed as the user is now redirected immediately:
-                            // successState.classList.remove('hidden');
                         },
                         onFailure: function (err) {
                             setPasswordBtn.textContent = "Set New Password & Sign In";
@@ -384,9 +382,6 @@
                                 forgotPasswordForm.classList.add('hidden');
                                 // >>> REDIRECT ADDED HERE <<<
                                 window.location.href = CONFIG.airtableUrl;
-                                
-                                // The following lines were removed as the user is now redirected immediately:
-                                // successState.classList.remove('hidden');
                                 updateUI(false);
                             },
                             onFailure: function(err) {
@@ -401,6 +396,7 @@
 
         // Polling function to wait for AmazonCognitoIdentity to be defined
         function checkCognitoAndInit() {
+            // Check for the existence of the specific Cognito Identity utility object
             if (typeof AmazonCognitoIdentity !== 'undefined') {
                 // The object is available, initialize the application
                 initializeApp();
