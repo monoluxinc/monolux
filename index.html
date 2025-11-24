@@ -100,17 +100,14 @@
 
    <!-- Custom Login Script -->
    <script>
-       // Configuration
+       const { Amplify, Auth } = window.aws_amplify;
+
        const CONFIG = {
            airtableUrl: "https://airtable.com",
            cognitoUserPoolId: "us-east-2_QQl1TrpJc",
            cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq",
            allowedUsers: ["dank", "maddiej"]
        };
-
-       // Configure Amplify
-       const Amplify = window.aws_amplify.Amplify;
-       const Auth = window.aws_amplify.Auth;
 
        Amplify.configure({
            Auth: {
@@ -121,7 +118,6 @@
            }
        });
 
-       // Login function
        async function login(username, password) {
            if (!CONFIG.allowedUsers.includes(username)) {
                alert("You are not authorized to log in.");
@@ -133,35 +129,26 @@
                const user = await Auth.signIn(username, password);
                document.getElementById('loginForm').classList.add('hidden');
                document.getElementById('successState').classList.remove('hidden');
-               console.log("Login successful:", user);
 
-               // Redirect to Airtable after short delay
                setTimeout(() => {
                    window.location.href = CONFIG.airtableUrl;
                }, 1200);
 
            } catch (error) {
-               if (error.code === "UserNotFoundException") {
-                   alert("Username not found.");
-               } else if (error.code === "NotAuthorizedException") {
-                   alert("Incorrect username or password.");
-               } else if (error.code === "UserNotConfirmedException") {
-                   alert("Your account is not confirmed yet.");
-               } else {
-                   alert(`Login failed: ${error.message}`);
-               }
+               if (error.code === "UserNotFoundException") alert("Username not found.");
+               else if (error.code === "NotAuthorizedException") alert("Incorrect username or password.");
+               else if (error.code === "UserNotConfirmedException") alert("Your account is not confirmed yet.");
+               else alert(`Login failed: ${error.message}`);
                console.error(error);
                resetButton();
            }
        }
 
-       // Reset button state
        function resetButton() {
            document.getElementById('btn-text').textContent = "Sign In Securely";
            document.getElementById('btn-spinner').classList.add('hidden');
        }
 
-       // Handle form submit
        document.getElementById('loginForm').addEventListener('submit', function(e) {
            e.preventDefault();
            const username = document.getElementById('username').value;
