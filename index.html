@@ -82,6 +82,10 @@
                    </div>
                </button>
            </form>
+           
+                      <div id="errorState" class="hidden text-center py-4 rounded-lg bg-red-50 border border-red-200 mt-4">
+               <p class="text-sm font-medium text-red-700">Invalid username or password.</p>
+           </div>
 
                       <div id="successState" class="hidden text-center py-4">
                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
@@ -106,13 +110,18 @@
 
       <script>
        // ==========================================
-       // ⚙️ CONFIGURATION SECTION
+       // 🔑 CONFIGURATION SECTION
        // ==========================================
        const CONFIG = {
            // 1. YOUR AIRTABLE URL (Replace the example below when you have the link)
            airtableUrl: "https://airtable.com",
 
-           // 2. YOUR COGNITO IDs
+           // **--- ADDED CREDENTIALS ---**
+           CORRECT_USERNAME: "**dank@monluxinc.com**",
+           CORRECT_PASSWORD: "**Isds4125**",
+           // **---------------------------**
+
+           // 2. YOUR COGNITO IDs (Not used for this local check, but kept for context)
            cognitoUserPoolId: "us-east-2_QQl1TrpJc",
            cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq"
        };
@@ -122,32 +131,59 @@
        // Apply the Airtable Link to the button
        document.getElementById('airtable-link').href = CONFIG.airtableUrl;
 
+       const btnText = document.getElementById('btn-text');
+       const btnSpinner = document.getElementById('btn-spinner');
+       const form = document.getElementById('loginForm');
+       const successState = document.getElementById('successState');
+       const errorState = document.getElementById('errorState');
+       const userInput = document.getElementById('username');
+       const passInput = document.getElementById('password');
+
+       // **--- NEW FUNCTION TO HANDLE FAILURE ---**
+       function handleAuthFailure(message) {
+           // Reset button state
+           btnText.textContent = "Sign In Securely";
+           btnSpinner.classList.add('hidden');
+           // Display error message
+           document.querySelector('#errorState p').textContent = message;
+           errorState.classList.remove('hidden');
+           // Clear password field for security
+           passInput.value = '';
+       }
+       // **---------------------------------------**
+
+
        // Handle Login Submit
        document.getElementById('loginForm').addEventListener('submit', function(e) {
            e.preventDefault();
-          
-           const btnText = document.getElementById('btn-text');
-           const btnSpinner = document.getElementById('btn-spinner');
-           const form = document.getElementById('loginForm');
-           const successState = document.getElementById('successState');
-           const userInput = document.getElementById('username');
-           const passInput = document.getElementById('password');
+           
+           // Hide previous error message
+           errorState.classList.add('hidden'); 
 
            // Basic validation
            if(userInput.value && passInput.value) {
-              
                // 1. Show Loading State
                btnText.textContent = "Verifying Credentials...";
                btnSpinner.classList.remove('hidden');
               
-               // NOTE: The current code below acts as a visual simulation.
-
-               // 2. Simulate API Delay
+               // 2. Simulate API Delay (1.5 seconds)
                setTimeout(() => {
-                   // 3. Hide Form, Show Success
-                   form.classList.add('hidden');
-                   successState.classList.remove('hidden');
+                   
+                   // **--- THE CORE AUTHENTICATION LOGIC ---**
+                   if (userInput.value === CONFIG.CORRECT_USERNAME && passInput.value === CONFIG.CORRECT_PASSWORD) {
+                       // AUTHENTICATION SUCCESS
+                       form.classList.add('hidden');
+                       successState.classList.remove('hidden');
+                   } else {
+                       // AUTHENTICATION FAILURE
+                       handleAuthFailure("Invalid username or password.");
+                   }
+                   // **---------------------------------------**
+
                }, 1500);
+           } else {
+               // Should not be hit due to 'required' attribute, but good practice
+               handleAuthFailure("Please enter both a username and password.");
            }
        });
    </script>
