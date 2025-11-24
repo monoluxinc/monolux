@@ -95,14 +95,17 @@
        </div>
    </div>
 
-   <!-- AWS Amplify + Cognito + Allowlist Login -->
+   <!-- AWS Amplify Library -->
    <script src="https://unpkg.com/aws-amplify@5.0.4/dist/aws-amplify.min.js"></script>
+
+   <!-- Custom Login Script -->
    <script>
+       // Configuration
        const CONFIG = {
            airtableUrl: "https://airtable.com",
            cognitoUserPoolId: "us-east-2_QQl1TrpJc",
            cognitoClientId: "69o0f3ij9bsvubrcgkqat8pccq",
-           allowedUsers: ["dank", "maddiej"] // approved users
+           allowedUsers: ["dank", "maddiej"]
        };
 
        // Configure Amplify
@@ -118,6 +121,7 @@
            }
        });
 
+       // Login function
        async function login(username, password) {
            if (!CONFIG.allowedUsers.includes(username)) {
                alert("You are not authorized to log in.");
@@ -131,7 +135,7 @@
                document.getElementById('successState').classList.remove('hidden');
                console.log("Login successful:", user);
 
-               // Redirect after showing success
+               // Redirect to Airtable after short delay
                setTimeout(() => {
                    window.location.href = CONFIG.airtableUrl;
                }, 1200);
@@ -151,11 +155,13 @@
            }
        }
 
+       // Reset button state
        function resetButton() {
            document.getElementById('btn-text').textContent = "Sign In Securely";
            document.getElementById('btn-spinner').classList.add('hidden');
        }
 
+       // Handle form submit
        document.getElementById('loginForm').addEventListener('submit', function(e) {
            e.preventDefault();
            const username = document.getElementById('username').value;
