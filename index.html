@@ -4,9 +4,10 @@
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Monolux | Employee Portal</title>
-   <!-- Tailwind CSS -->
+   
+   <script src="https://unpkg.com/amazon-cognito-identity-js@6.3.1/dist/amazon-cognito-identity.min.js"></script>
+
    <script src="https://cdn.tailwindcss.com"></script>
-   <!-- Inter Font -->
    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
    <style>
        body {
@@ -34,7 +35,6 @@
    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative">
        <div class="h-2 w-full bg-red-600"></div>
        <div class="p-8">
-           <!-- LOGO -->
            <div class="text-center mb-8">
                <div class="flex justify-center mb-2">
                    <div class="h-16 w-16 bg-black text-red-600 flex items-center justify-center rounded-lg transform -skew-x-12 border-2 border-red-600">
@@ -44,7 +44,6 @@
                <h1 class="text-3xl font-bold text-gray-900 tracking-tight">MONOLUX</h1>
                <p class="text-sm text-gray-500 uppercase tracking-widest mt-1 font-semibold">Employee Portal</p>
            </div>
-           <!-- LOGIN FORM -->
            <form id="loginForm" class="space-y-6">
                <div>
                    <label for="username" class="block text-sm font-medium text-gray-700">Employee Username</label>
@@ -80,13 +79,12 @@
                    </div>
                </button>
            </form>
-           <!-- SUCCESS STATE -->
            <div id="successState" class="hidden text-center py-4">
                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
                    <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                </div>
                <h3 class="text-lg leading-6 font-medium text-gray-900">Authentication Successful</h3>
-               <p class="mt-2 text-sm text-gray-500">Welcome back to the Monolux Workspace.</p>
+               <p class="mt-2 text-sm text-gray-500">Redirecting to database...</p>
            </div>
        </div>
       
@@ -95,33 +93,28 @@
        </div>
    </div>
 
-   <!-- Custom Login Script -->
    <script>
-       const CONFIG = {
-           airtableUrl: "https://airtable.com",
-           allowedUsername: "dank",
-           allowedPassword: "ISDS4125"
+       // --- CONFIGURATION ---
+       const COGNITO_CONFIG = {
+           UserPoolId: 'us-east-2_QQl1TrpJc',        // Your provided ID
+           ClientId: '69o0f3ij9bsvubrcgkqat8pccq',   // Your provided Client ID
+           // REPLACE THIS LINK WITH YOUR AIRTABLE SHARED VIEW LINK
+           airtableDestination: "https://airtable.com/appCcEBbYlwZgXnKr/pag66OnwMOwh4xnvR" 
        };
+
+       // Initialize AWS Cognito Pool
+       const poolData = {
+           UserPoolId: COGNITO_CONFIG.UserPoolId,
+           ClientId: COGNITO_CONFIG.ClientId
+       };
+       const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
        function resetButton() {
            document.getElementById('btn-text').textContent = "Sign In Securely";
            document.getElementById('btn-spinner').classList.add('hidden');
        }
 
-       async function login(username, password) {
-           if(username === CONFIG.allowedUsername && password === CONFIG.allowedPassword) {
-               document.getElementById('loginForm').classList.add('hidden');
-               document.getElementById('successState').classList.remove('hidden');
-
-               setTimeout(() => {
-                   window.location.href = CONFIG.airtableUrl;
-               }, 1200);
-           } else {
-               alert("Incorrect username or password.");
-               resetButton();
-           }
-       }
-
+       // Handle Form Submission
        document.getElementById('loginForm').addEventListener('submit', function(e) {
            e.preventDefault();
 
@@ -129,9 +122,52 @@
            const password = document.getElementById('password').value;
 
            if(username && password) {
+               // Update UI to loading state
                document.getElementById('btn-text').textContent = "Verifying Credentials...";
                document.getElementById('btn-spinner').classList.remove('hidden');
-               login(username, password);
+
+               // Create Authentication Data
+               const authenticationData = {
+                   Username: username,
+                   Password: password,
+               };
+               const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+
+               const userData = {
+                   Username: username,
+                   Pool: userPool,
+               };
+               const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
+               // Execute AWS Login
+               cognitoUser.authenticateUser(authenticationDetails, {
+                   onSuccess: function(result) {
+                       // Login Successful
+                       console.log("Access Token: " + result.getAccessToken().getJwtToken());
+
+                       document.getElementById('loginForm').classList.add('hidden');
+                       document.getElementById('successState').classList.remove('hidden');
+
+                       setTimeout(() => {
+                           // Redirect to Airtable
+                           window.location.href = COGNITO_CONFIG.airtableDestination;
+                       }, 1200);
+                   },
+
+                   onFailure: function(err) {
+                       // Login Failed
+                       console.error(err);
+                       alert(err.message || "Incorrect username or password.");
+                       resetButton();
+                   },
+
+                   newPasswordRequired: function(userAttributes, requiredAttributes) {
+                       // Handle case where admin created user needs to change password
+                       // For this project, we will just alert them.
+                       alert("Password reset required. Please contact your administrator.");
+                       resetButton();
+                   }
+               });
            }
        });
    </script>
